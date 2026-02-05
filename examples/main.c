@@ -6,8 +6,8 @@ int main() {
   //   logger_enable_file_output(log, "path_to_file");
   logger_start(log, LOGGER_LEVEL_TRACE);
 
-  LOG_INFO(log, "Hola %s", "David");
-  LOG_DEBUG(log, "Valor=%d", 123);
+  LOG_INFO(log, "HI %s", "David");
+  LOG_DEBUG(log, "Value=%d", 123);
 
   logger_stop(log);
   logger_destroy(log);
