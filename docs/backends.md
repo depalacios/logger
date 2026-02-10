@@ -2,6 +2,7 @@
 
 ## Console backend (C)
 - Writes to stdout/stderr depending on level.
+- Enabled by default in the current logger implementation.
 
 ## File backend (C)
 - Writes to a configured file path.

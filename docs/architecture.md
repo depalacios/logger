@@ -22,3 +22,8 @@ Backends are created by factory functions (e.g. console/file/quill/tracy).
 Composite aggregates multiple backends (fan-out). This enables combinations like:
 - Console + File
 - Quill + Tracy
+
+## Notes
+- Console output is enabled by default (`console_enabled = 1` in the current implementation).
+  There is no public API yet to disable console output at runtime.
+- Backends are (re)built on `logger_start()` via `make_backend()`.

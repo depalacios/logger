@@ -1,6 +1,6 @@
 # Logger (C API) — backend-swappable
 
-A small, reusable logging library with a stable C API and interchangeable backends.
+A small, reusable logging library with a **stable C API** and **interchangeable backends**.
 Designed so **executables configure logging once**, while **dependencies only emit logs**
 (without knowing which backend is used).
 
@@ -10,10 +10,10 @@ Designed so **executables configure logging once**, while **dependencies only em
 - Levels: `TRACE, DEBUG, INFO, WARN, ERROR, FATAL`
 - Callsite capture via macros (`__FILE__` / `__LINE__`)
 - Backends:
-  - **Console** (C)
+  - **Console** (C) — enabled by default
   - **File** (C)
-  - **Tracy** (C wrapper)
-  - **Quill** (C++ backend; async; file/console sinks)
+  - **Tracy** (C wrapper; shows messages in Tracy UI)
+  - **Quill** (C++ backend; async; console/file sinks)
 - Composite backend (fan-out) for combinations like:
   - `Console + File`
   - `Quill + Tracy` (Quill logs + Tracy profiler)
@@ -25,17 +25,23 @@ Designed so **executables configure logging once**, while **dependencies only em
 ## Quick start
 
 ```c
-#include "logger.h"
+#include <logger.h>
+#include <stdio.h>
 
-int main(int argc, char** argv) {
-  logger_handle_t* log = logger_init();
-  if (!log) return 1;
+int main(int argc, char *argv[]) {
+  logger_handle_t *log = logger_init();
+  if (!log) {
+    printf("logger_init failed\n");
+    return 1;
+  }
 
-  // optional outputs (depends on build/backend)
+  // Optional: file output
   // logger_enable_file_output(log, "app.log");
-  // logger_enable_console_output(log);
-  // logger_enable_tracy(log);
 
+  // Optional: tracy output (if compiled in)
+  logger_enable_tracy(log);
+
+  // Start logger with minimum level
   logger_start(log, LOGGER_LEVEL_TRACE);
 
   LOG_INFO(log,  "Logger started");
@@ -49,16 +55,26 @@ int main(int argc, char** argv) {
 }
 ```
 
-## Build
+## Building
 
-This repository is intentionally build-system-agnostic.
-A typical build script can compile:
-- Plain C (Console/File)
-- Quill backend (C++)
-- Tracy backend (C/C++)
+This repo is intentionally build-system-agnostic.
 
-See: docs/BUILDING.md.
+Build modes
+- C only: Console/File
+- C + Tracy: Tracy backend compiled in
+- C++ + Quill: Quill backend compiled in
+- C++ + Quill + Tracy: both compiled; runtime composite can fan-out
+
+Compile flags
+- -DUSE_QUILL enables the Quill backend translation unit(s)
+- -DTRACY_ENABLE enables Tracy compilation/instrumentation (and you must compile TracyClient.cpp into your binary)
+
+See: docs/building.md.
+
+## API
+
+See: docs/api.md.
 
 ## License
 
-(TODO)
+(TODO).
