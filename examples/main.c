@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   // logger_enable_file_output(log, "app.log");
 
   /* enable tracy (if compiled) */
-  logger_enable_tracy(log);
+  // logger_enable_tracy(log);
 
   /* level */
   logger_start(log, LOGGER_LEVEL_TRACE);

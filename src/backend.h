@@ -43,16 +43,16 @@ typedef struct logger_backend_vtbl {
   /**
    * @brief Starts the backend.
    * @param backend Backend instance.
-   * @return 0 on success, non-zero on failure (implementation-defined).
+   * @return LOGGER_OK on success, or a logger_status_t error code on failure.
    */
-  int (*start)(struct logger_backend *backend);
+  logger_status_t (*start)(logger_backend_t *backend);
 
   /**
    * @brief Stops the backend and releases runtime resources.
    * @param backend Backend instance.
-   * @return 0 on success, non-zero on failure (implementation-defined).
+   * @return LOGGER_OK on success, or a logger_status_t error code on failure.
    */
-  int (*stop)(struct logger_backend *backend);
+  logger_status_t (*stop)(logger_backend_t *backend);
 
   /**
    * @brief Emits a log message.
@@ -67,14 +67,14 @@ typedef struct logger_backend_vtbl {
    * @param line Source line where the log was emitted.
    * @param msg  Formatted message.
    */
-  void (*log)(struct logger_backend *backend, logger_level_t level,
-              const char *file, int line, const char *msg);
+  void (*log)(logger_backend_t *backend, logger_level_t level, const char *file,
+              int line, const char *msg);
 
   /**
    * @brief Destroys the backend and frees all resources.
    * @param backend Backend instance.
    */
-  void (*destroy)(struct logger_backend *backend);
+  void (*destroy)(logger_backend_t *backend);
 } logger_backend_vtbl_t;
 
 /**
