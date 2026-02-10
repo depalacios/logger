@@ -1,3 +1,21 @@
+/**
+ * @file logger.h
+ * @brief Public C API for the logger.
+ *
+ * Typical usage:
+ *  1) logger_handle_t* log = logger_init();
+ *  2) Optional configuration (file/tracy/etc.)
+ *  3) logger_start(log, LOGGER_LEVEL_INFO);
+ *  4) LOG_INFO(log, "..."), LOG_ERROR(log, "...")
+ *  5) logger_stop(log);
+ *  6) logger_destroy(log);
+ *
+ * Notes:
+ * - The logger drops messages if it is not started.
+ * - Filtering rule: a message is emitted if (message_level >=
+ * configured_level).
+ */
+
 #ifndef LOGGER_H
 #define LOGGER_H
 
@@ -56,7 +74,6 @@ typedef enum logger_level {
 typedef struct logger_handle logger_handle_t;
 
 // --- Logger API --- //
-
 /**
  * @brief Allocate and initialize a logger instance.
  *
@@ -148,13 +165,9 @@ logger_status_t logger_enable_file_output(logger_handle_t *logger,
 logger_status_t logger_disable_file_output(logger_handle_t *logger);
 
 // --- Logger tracy config --- //
-
 /**
- * @brief Enable Tracy integration (no-op in current pure-C implementation).
+ * @brief Enable Tracy integration.
  *
- * Intended future behavior:
- * - When Tracy backend is integrated, enabling this will emit messages/zones to
- * Tracy.
  *
  * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
@@ -170,7 +183,6 @@ logger_status_t logger_enable_tracy(logger_handle_t *logger);
 logger_status_t logger_disable_tracy(logger_handle_t *logger);
 
 // --- Logger --- //
-
 /**
  * @brief Core logging function (printf-style).
  *
