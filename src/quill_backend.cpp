@@ -4,15 +4,17 @@
 #include <memory>
 #include <mutex>
 #include <new>
+#include <optional>
 #include <vector>
 
-/* Prevents colision with logger.h macros */
+/* Prevents collision with logger.h macros */
 #define QUILL_DISABLE_NON_PREFIXED_MACROS
 
 #include "quill/Backend.h"
 #include "quill/Frontend.h"
 #include "quill/LogMacros.h"
 #include "quill/Logger.h"
+#include "quill/core/PatternFormatterOptions.h"
 #include "quill/sinks/ConsoleSink.h"
 #include "quill/sinks/FileSink.h"
 
@@ -33,8 +35,7 @@ static logger_status_t quill_start(logger_backend_t *) { return LOGGER_OK; }
 static logger_status_t quill_stop(logger_backend_t *self) {
   auto *ctx = static_cast<quill_ctx *>(self->ctx);
   if (ctx && ctx->logger) {
-    ctx->logger->flush_log(); // Quill v11: flush por logger
-                              // :contentReference[oaicite:2]{index=2}
+    ctx->logger->flush_log(); // Quill v11: flush per logger
   }
   return LOGGER_OK;
 }
@@ -77,8 +78,7 @@ static void quill_destroy(logger_backend_t *self) {
   auto *ctx = static_cast<quill_ctx *>(self->ctx);
   if (ctx) {
     if (ctx->logger) {
-      ctx->logger->flush_log(); // asegura que no queden mensajes pendientes
-                                // :contentReference[oaicite:3]{index=3}
+      ctx->logger->flush_log();
     }
     delete ctx;
   }
@@ -104,20 +104,20 @@ extern "C" logger_backend_t *logger_backend_quill_create(const char *file_path,
 
   if (file_path && file_path[0] != '\0') {
     quill::FileSinkConfig cfg;
-    cfg.set_open_mode('a'); // append (para 'w' sería truncate)
-                            // :contentReference[oaicite:4]{index=4}
+    cfg.set_open_mode('a');
 
     sinks.push_back(quill::Frontend::create_or_get_sink<quill::FileSink>(
-        file_path, cfg,
-        quill::FileEventNotifier{})); // patrón del quick start
-                                      // :contentReference[oaicite:5]{index=5}
+        file_path, cfg, quill::FileEventNotifier{}));
   }
 
   if (sinks.empty())
     return nullptr;
 
+  quill::PatternFormatterOptions logger_pfo;
+  logger_pfo.format_pattern = "%(message)";
+
   quill::Logger *logger =
-      quill::Frontend::create_or_get_logger("logger", sinks);
+      quill::Frontend::create_or_get_logger("backend", sinks, logger_pfo);
 
   logger->set_log_level(quill::LogLevel::TraceL3);
 
