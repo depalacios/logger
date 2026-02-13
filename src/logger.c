@@ -19,6 +19,8 @@
 #include <pthread.h>
 */
 
+logger_handle_t *base_logger = {0};
+
 struct logger_handle {
   logger_level_t level;
   int started;
@@ -103,10 +105,10 @@ fail:
   return NULL;
 }
 
-logger_handle_t *logger_init(void) {
+logger_status_t logger_init(void) {
   logger_handle_t *h = (logger_handle_t *)calloc(1, sizeof(*h));
   if (!h)
-    return NULL;
+    return LOGGER_OUT_OF_MEMORY;
 
   h->level = LOGGER_LEVEL_INFO;
   h->started = 0;
@@ -121,72 +123,72 @@ logger_handle_t *logger_init(void) {
   h->backend = NULL;
 
   /* pthread_mutex_init(&h->mutex, NULL); */
+  base_logger = h;
 
-  return h;
+  return LOGGER_OK;
 }
 
-logger_status_t logger_set_level(logger_handle_t *logger,
-                                 logger_level_t level) {
-  if (!logger)
+logger_status_t logger_set_level(logger_level_t level) {
+  if (!base_logger)
     return LOGGER_NO_EXIST;
 
   /* pthread_mutex_lock(&logger->mutex); */
-  logger->level = level;
+  base_logger->level = level;
   /* pthread_mutex_unlock(&logger->mutex); */
 
   return LOGGER_OK;
 }
 
-logger_status_t logger_start(logger_handle_t *logger, logger_level_t level) {
-  if (!logger)
+logger_status_t logger_start(logger_level_t level) {
+  if (!base_logger)
     return LOGGER_NO_EXIST;
 
   /* pthread_mutex_lock(&logger->mutex); */
 
-  logger->level = level;
+  base_logger->level = level;
 
   /* rebuild backend on start */
-  if (logger->backend) {
-    logger->backend->vtbl->stop(logger->backend);
-    logger->backend->vtbl->destroy(logger->backend);
-    logger->backend = NULL;
+  if (base_logger->backend) {
+    base_logger->backend->vtbl->stop(base_logger->backend);
+    base_logger->backend->vtbl->destroy(base_logger->backend);
+    base_logger->backend = NULL;
   }
 
-  logger->backend = make_backend(logger);
-  if (!logger->backend) {
+  base_logger->backend = make_backend(base_logger);
+  if (!base_logger->backend) {
     /* pthread_mutex_unlock(&logger->mutex); */
     return LOGGER_UNKOWN_ERROR;
   }
 
-  logger_status_t st = logger->backend->vtbl->start(logger->backend);
+  logger_status_t st = base_logger->backend->vtbl->start(base_logger->backend);
   if (st != LOGGER_OK) {
-    logger->backend->vtbl->destroy(logger->backend);
-    logger->backend = NULL;
+    base_logger->backend->vtbl->destroy(base_logger->backend);
+    base_logger->backend = NULL;
     /* pthread_mutex_unlock(&logger->mutex); */
     return st;
   }
 
-  logger->started = 1;
+  base_logger->started = 1;
 
   /* pthread_mutex_unlock(&logger->mutex); */
   return LOGGER_OK;
 }
 
-logger_status_t logger_stop(logger_handle_t *logger) {
-  if (!logger)
+logger_status_t logger_stop(void) {
+  if (!base_logger)
     return LOGGER_NO_EXIST;
 
   /* pthread_mutex_lock(&logger->mutex); */
 
-  logger->started = 0;
+  base_logger->started = 0;
 
-  if (logger->backend) {
-    logger_status_t st = logger->backend->vtbl->stop(logger->backend);
+  if (base_logger->backend) {
+    logger_status_t st = base_logger->backend->vtbl->stop(base_logger->backend);
 
     /* IMPORTANTE: destruir aquí para no dejar file/socket abierto si hacen stop
      * sin destroy */
-    logger->backend->vtbl->destroy(logger->backend);
-    logger->backend = NULL;
+    base_logger->backend->vtbl->destroy(base_logger->backend);
+    base_logger->backend = NULL;
 
     /* pthread_mutex_unlock(&logger->mutex); */
     return st;
@@ -196,32 +198,31 @@ logger_status_t logger_stop(logger_handle_t *logger) {
   return LOGGER_OK;
 }
 
-logger_status_t logger_destroy(logger_handle_t *logger) {
-  if (!logger)
+logger_status_t logger_destroy(void) {
+  if (!base_logger)
     return LOGGER_NO_EXIST;
 
   /* pthread_mutex_lock(&logger->mutex); */
 
-  if (logger->backend) {
-    logger->backend->vtbl->stop(logger->backend);
-    logger->backend->vtbl->destroy(logger->backend);
-    logger->backend = NULL;
+  if (base_logger->backend) {
+    base_logger->backend->vtbl->stop(base_logger->backend);
+    base_logger->backend->vtbl->destroy(base_logger->backend);
+    base_logger->backend = NULL;
   }
 
-  free(logger->file_path);
-  logger->file_path = NULL;
+  free(base_logger->file_path);
+  base_logger->file_path = NULL;
 
   /* pthread_mutex_unlock(&logger->mutex); */
   /* pthread_mutex_destroy(&logger->mutex); */
 
-  free(logger);
+  free(base_logger);
   return LOGGER_OK;
 }
 
 /* config */
-logger_status_t logger_enable_file_output(logger_handle_t *logger,
-                                          const char *path) {
-  if (!logger)
+logger_status_t logger_enable_file_output(const char *path) {
+  if (base_logger)
     return LOGGER_NO_EXIST;
   if (!path || !path[0])
     return LOGGER_INVALID_PATH;
@@ -235,57 +236,57 @@ logger_status_t logger_enable_file_output(logger_handle_t *logger,
   }
   strcpy(copy, path);
 
-  free(logger->file_path);
-  logger->file_path = copy;
+  free(base_logger->file_path);
+  base_logger->file_path = copy;
 
-  logger->file_enabled = 1;
+  base_logger->file_enabled = 1;
 
   /* pthread_mutex_unlock(&logger->mutex); */
   return LOGGER_OK;
 }
 
-logger_status_t logger_disable_file_output(logger_handle_t *logger) {
-  if (!logger)
+logger_status_t logger_disable_file_output() {
+  if (!base_logger)
     return LOGGER_NO_EXIST;
 
   /* pthread_mutex_lock(&logger->mutex); */
-  logger->file_enabled = 0;
+  base_logger->file_enabled = 0;
   /* pthread_mutex_unlock(&logger->mutex); */
 
   return LOGGER_OK;
 }
 
-logger_status_t logger_enable_tracy(logger_handle_t *logger) {
-  if (!logger)
+logger_status_t logger_enable_tracy() {
+  if (!base_logger)
     return LOGGER_NO_EXIST;
 
   /* pthread_mutex_lock(&logger->mutex); */
-  logger->tracy_enabled = 1;
+  base_logger->tracy_enabled = 1;
   /* pthread_mutex_unlock(&logger->mutex); */
 
   return LOGGER_OK;
 }
 
-logger_status_t logger_disable_tracy(logger_handle_t *logger) {
-  if (!logger)
+logger_status_t logger_disable_tracy() {
+  if (!base_logger)
     return LOGGER_NO_EXIST;
 
   /* pthread_mutex_lock(&logger->mutex); */
-  logger->tracy_enabled = 0;
+  base_logger->tracy_enabled = 0;
   /* pthread_mutex_unlock(&logger->mutex); */
 
   return LOGGER_OK;
 }
 
-void logger_log(logger_handle_t *logger, logger_level_t level, const char *file,
-                int line, const char *fmt, ...) {
-  if (!logger)
+void logger_log(logger_level_t level, const char *file, int line,
+                const char *fmt, ...) {
+  if (!base_logger)
     return;
-  if (!logger->started)
+  if (!base_logger->started)
     return;
-  if (level < logger->level)
+  if (level < base_logger->level)
     return;
-  if (!logger->backend)
+  if (!base_logger->backend)
     return;
 
   char msg[2048];
@@ -295,8 +296,9 @@ void logger_log(logger_handle_t *logger, logger_level_t level, const char *file,
   va_end(args);
 
   /* pthread_mutex_lock(&logger->mutex); */
-  if (logger->backend) {
-    logger->backend->vtbl->log(logger->backend, level, file, line, msg);
+  if (base_logger->backend) {
+    base_logger->backend->vtbl->log(base_logger->backend, level, file, line,
+                                    msg);
   }
   /* pthread_mutex_unlock(&logger->mutex); */
 }

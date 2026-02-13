@@ -114,7 +114,7 @@ extern "C" logger_backend_t *logger_backend_quill_create(const char *file_path,
     return nullptr;
 
   quill::PatternFormatterOptions logger_pfo;
-  logger_pfo.format_pattern = "%(message)";
+  logger_pfo.format_pattern = "%(time) [%(thread_id)] %(log_level) %(message)";
 
   quill::Logger *logger =
       quill::Frontend::create_or_get_logger("backend", sinks, logger_pfo);

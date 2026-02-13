@@ -85,7 +85,7 @@ typedef struct logger_handle logger_handle_t;
  *
  * @return Pointer to logger handle on success, NULL on allocation failure.
  */
-logger_handle_t *logger_init(void);
+logger_status_t logger_init(void);
 
 /**
  * @brief Set the minimum log level to be emitted.
@@ -94,7 +94,7 @@ logger_handle_t *logger_init(void);
  * @param level  Minimum severity to emit.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
-logger_status_t logger_set_level(logger_handle_t *logger, logger_level_t level);
+logger_status_t logger_set_level(logger_level_t level);
 
 /**
  * @brief Start the logger and optionally set the log level.
@@ -106,7 +106,7 @@ logger_status_t logger_set_level(logger_handle_t *logger, logger_level_t level);
  * @param level  Minimum severity to emit.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
-logger_status_t logger_start(logger_handle_t *logger, logger_level_t level);
+logger_status_t logger_start(logger_level_t level);
 
 /**
  * @brief Stop the logger.
@@ -118,7 +118,7 @@ logger_status_t logger_start(logger_handle_t *logger, logger_level_t level);
  * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
-logger_status_t logger_stop(logger_handle_t *logger);
+logger_status_t logger_stop(void);
 
 /**
  * @brief Destroy a logger instance and release all associated resources.
@@ -129,7 +129,7 @@ logger_status_t logger_stop(logger_handle_t *logger);
  * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
-logger_status_t logger_destroy(logger_handle_t *logger);
+logger_status_t logger_destroy(void);
 
 // --- Logger API file config --- //
 
@@ -151,8 +151,7 @@ logger_status_t logger_destroy(logger_handle_t *logger);
  *         - LOGGER_OUT_OF_MEMORY
  *         - LOGGER_UNABLE_TO_OPEN_FILE
  */
-logger_status_t logger_enable_file_output(logger_handle_t *logger,
-                                          const char *path);
+logger_status_t logger_enable_file_output(const char *path);
 
 /**
  * @brief Disable file output and close the log file if open.
@@ -162,7 +161,7 @@ logger_status_t logger_enable_file_output(logger_handle_t *logger,
  * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
-logger_status_t logger_disable_file_output(logger_handle_t *logger);
+logger_status_t logger_disable_file_output();
 
 // --- Logger tracy config --- //
 /**
@@ -172,7 +171,7 @@ logger_status_t logger_disable_file_output(logger_handle_t *logger);
  * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
-logger_status_t logger_enable_tracy(logger_handle_t *logger);
+logger_status_t logger_enable_tracy();
 
 /**
  * @brief Disable Tracy integration.
@@ -180,7 +179,7 @@ logger_status_t logger_enable_tracy(logger_handle_t *logger);
  * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
-logger_status_t logger_disable_tracy(logger_handle_t *logger);
+logger_status_t logger_disable_tracy();
 
 // --- Logger --- //
 /**
@@ -202,8 +201,8 @@ logger_status_t logger_disable_tracy(logger_handle_t *logger);
  * @param fmt    printf-style format string.
  * @param ...    Format arguments.
  */
-void logger_log(logger_handle_t *logger, logger_level_t level, const char *file,
-                int line, const char *fmt, ...);
+void logger_log(logger_level_t level, const char *file, int line,
+                const char *fmt, ...);
 
 /**
  * @name Convenience macros
@@ -215,23 +214,23 @@ void logger_log(logger_handle_t *logger, logger_level_t level, const char *file,
  * - Consider wrapping in do { ... } while (0) for safer macro behavior
  *   inside if/else blocks.
  */
-#define LOG_TRACE(logger, fmt, ...)                                            \
-  logger_log(logger, LOGGER_LEVEL_TRACE, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_TRACE(fmt, ...)                                                    \
+  logger_log(LOGGER_LEVEL_TRACE, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define LOG_DEBUG(logger, fmt, ...)                                            \
-  logger_log(logger, LOGGER_LEVEL_DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...)                                                    \
+  logger_log(LOGGER_LEVEL_DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define LOG_INFO(logger, fmt, ...)                                             \
-  logger_log(logger, LOGGER_LEVEL_INFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...)                                                     \
+  logger_log(LOGGER_LEVEL_INFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define LOG_WARN(logger, fmt, ...)                                             \
-  logger_log(logger, LOGGER_LEVEL_WARN, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_WARN(fmt, ...)                                                     \
+  logger_log(LOGGER_LEVEL_WARN, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define LOG_ERROR(logger, fmt, ...)                                            \
-  logger_log(logger, LOGGER_LEVEL_ERROR, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...)                                                    \
+  logger_log(LOGGER_LEVEL_ERROR, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define LOG_FATAL(logger, fmt, ...)                                            \
-  logger_log(logger, LOGGER_LEVEL_FATAL, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_FATAL(fmt, ...)                                                    \
+  logger_log(LOGGER_LEVEL_FATAL, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 /** @} */
 
 #ifdef __cplusplus

@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
-  logger_handle_t *log = logger_init();
-  if (!log) {
+  logger_status_t ret = logger_init();
+  if (ret != LOGGER_OK) {
     printf("logger_init failed\n");
     return 1;
   }
@@ -15,16 +15,16 @@ int main(int argc, char *argv[]) {
   // logger_enable_tracy(log);
 
   /* level */
-  logger_start(log, LOGGER_LEVEL_TRACE);
+  logger_start(LOGGER_LEVEL_TRACE);
 
   /* ---- How to use ---- */
-  LOG_INFO(log, "Logger started");
-  LOG_DEBUG(log, "argc=%d", argc);
-  LOG_WARN(log, "This is a warning");
-  LOG_ERROR(log, "This is an error");
+  LOG_INFO("Logger started");
+  LOG_DEBUG("argc=%d", argc);
+  LOG_WARN("This is a warning");
+  LOG_ERROR("This is an error");
 
   /* ---- SHUTDOWN ---- */
-  logger_stop(log);
-  logger_destroy(log);
+  logger_stop();
+  logger_destroy();
   return 0;
 }
