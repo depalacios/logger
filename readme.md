@@ -31,15 +31,15 @@ Designed so **executables configure logging once**, while **dependencies only em
 int main(int argc, char *argv[]) {
   logger_status_t ret = logger_init();
   if (ret != LOGGER_OK) {
-    printf("logger_init failed\n");
+    printf("logger_init failed ret=%s\n", logger_status_to_string(ret));
     return 1;
   }
 
   /* enable file */
-  // ret = logger_enable_file_output("app.log");
-  // if (ret != LOGGER_OK) {
-  //   printf("ret=%d", ret);
-  // }
+  ret = logger_enable_file_output("app.log");
+  if (ret != LOGGER_OK) {
+    printf("error=%s\n", logger_status_to_string(ret));
+  }
 
   /* enable tracy (if compiled) */
   // logger_enable_tracy();
