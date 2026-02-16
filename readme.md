@@ -29,30 +29,36 @@ Designed so **executables configure logging once**, while **dependencies only em
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
-  logger_handle_t *log = logger_init();
-  if (!log) {
+  logger_status_t ret = logger_init();
+  if (ret != LOGGER_OK) {
     printf("logger_init failed\n");
     return 1;
   }
 
-  // Optional: file output
-  // logger_enable_file_output(log, "app.log");
+  /* enable file */
+  // ret = logger_enable_file_output("app.log");
+  // if (ret != LOGGER_OK) {
+  //   printf("ret=%d", ret);
+  // }
 
-  // Optional: tracy output (if compiled in)
-  logger_enable_tracy(log);
+  /* enable tracy (if compiled) */
+  // logger_enable_tracy();
 
-  // Start logger with minimum level
-  logger_start(log, LOGGER_LEVEL_TRACE);
+  /* level */
+  logger_start(LOGGER_LEVEL_TRACE);
 
-  LOG_INFO(log,  "Logger started");
-  LOG_DEBUG(log, "argc=%d", argc);
-  LOG_WARN(log,  "This is a warning");
-  LOG_ERROR(log, "This is an error");
+  /* ---- How to use ---- */
+  LOG_INFO("Logger started");
+  LOG_DEBUG("argc=%d", argc);
+  LOG_WARN("This is a warning");
+  LOG_ERROR("This is an error");
 
-  logger_stop(log);
-  logger_destroy(log);
+  /* ---- SHUTDOWN ---- */
+  logger_stop();
+  logger_destroy();
   return 0;
 }
+
 ```
 
 ## Building

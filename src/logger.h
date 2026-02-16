@@ -3,12 +3,12 @@
  * @brief Public C API for the logger.
  *
  * Typical usage:
- *  1) logger_handle_t* log = logger_init();
+ *  1) logger_status_t ret = logger_init();
  *  2) Optional configuration (file/tracy/etc.)
- *  3) logger_start(log, LOGGER_LEVEL_INFO);
- *  4) LOG_INFO(log, "..."), LOG_ERROR(log, "...")
- *  5) logger_stop(log);
- *  6) logger_destroy(log);
+ *  3) logger_start(LOGGER_LEVEL_INFO);
+ *  4) LOG_INFO("..."), LOG_ERROR("...")
+ *  5) logger_stop();
+ *  6) logger_destroy();
  *
  * Notes:
  * - The logger drops messages if it is not started.
@@ -83,14 +83,14 @@ typedef struct logger_handle logger_handle_t;
  * - file output: disabled
  * - tracy: disabled
  *
- * @return Pointer to logger handle on success, NULL on allocation failure.
+ * @return LOGGER_OK on success, LOGGER_OUT_OF_MEMORY if unable to allocate
+ * memory.
  */
 logger_status_t logger_init(void);
 
 /**
  * @brief Set the minimum log level to be emitted.
  *
- * @param logger Logger handle.
  * @param level  Minimum severity to emit.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
@@ -102,7 +102,6 @@ logger_status_t logger_set_level(logger_level_t level);
  * After start, logger_log() and LOG_* macros will emit messages according to
  * the configured level.
  *
- * @param logger Logger handle.
  * @param level  Minimum severity to emit.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
@@ -115,7 +114,6 @@ logger_status_t logger_start(logger_level_t level);
  * - Disables emission of new log messages (started = false).
  * - Flushes outputs (stdout/stderr and file if enabled).
  *
- * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
 logger_status_t logger_stop(void);
@@ -126,7 +124,6 @@ logger_status_t logger_stop(void);
  * This closes the log file (if enabled), releases allocated memory, and frees
  * the logger handle itself.
  *
- * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
 logger_status_t logger_destroy(void);
@@ -142,7 +139,6 @@ logger_status_t logger_destroy(void);
  * - If file output is already enabled, returns LOGGER_FILE_IS_ALREADY_OPEN.
  * - On success, subsequent logs are also written to the file.
  *
- * @param logger Logger handle.
  * @param path   Path to log file (must be non-NULL and non-empty).
  * @return LOGGER_OK on success, or an error status on failure:
  *         - LOGGER_NO_EXIST
@@ -158,7 +154,6 @@ logger_status_t logger_enable_file_output(const char *path);
  *
  * Safe to call even if file output is not enabled.
  *
- * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
 logger_status_t logger_disable_file_output();
@@ -168,7 +163,6 @@ logger_status_t logger_disable_file_output();
  * @brief Enable Tracy integration.
  *
  *
- * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
 logger_status_t logger_enable_tracy();
@@ -176,7 +170,6 @@ logger_status_t logger_enable_tracy();
 /**
  * @brief Disable Tracy integration.
  *
- * @param logger Logger handle.
  * @return LOGGER_OK on success, LOGGER_NO_EXIST if logger is NULL.
  */
 logger_status_t logger_disable_tracy();
@@ -194,7 +187,6 @@ logger_status_t logger_disable_tracy();
  * - If file output is enabled, messages are also appended to the configured
  * file.
  *
- * @param logger Logger handle.
  * @param level  Severity of this message.
  * @param file   Source file (usually __FILE__).
  * @param line   Source line (usually __LINE__).

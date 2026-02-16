@@ -43,7 +43,7 @@ Opaque logger instance. Create it with `logger_init()` and release it with `logg
 
 ## Lifecycle
 
-### `logger_handle_t* logger_init(void);`
+### `logger_status_t logger_init(void);`
 
 Allocates and initializes a logger instance.
 
@@ -55,10 +55,10 @@ Default configuration:
 - tracy: disabled
 
 Returns:
-- non-NULL pointer on success
-- NULL on allocation failure
+- LOGGER_OK code on success
+- LOGGER_OUT_OF_MEMORY on allocation failure
 
-### `logger_status_t logger_start(logger_handle_t* logger, logger_level_t level);`
+### `logger_status_t logger_start(logger_level_t level);`
 
 Starts the logger and sets the minimum log level.
 
@@ -66,7 +66,7 @@ Notes:
 - The backend graph is (re)built at start.
 - After start, `logger_log()` and `LOG_*` macros emit messages according to the configured level.
 
-### `logger_status_t logger_stop(logger_handle_t* logger);`
+### `logger_status_t logger_stop();`
 
 Stops logging:
 - disables emission of new messages
@@ -74,7 +74,7 @@ Stops logging:
 
 Safe to call multiple times.
 
-### `logger_status_t logger_destroy(logger_handle_t* logger);`
+### `logger_status_t logger_destroy();`
 
 Stops (if needed), releases resources (including file path memory), and frees the logger handle.
 
@@ -82,33 +82,33 @@ Stops (if needed), releases resources (including file path memory), and frees th
 
 ## Configuration
 
-### `logger_status_t logger_set_level(logger_handle_t* logger, logger_level_t level);`
+### `logger_status_t logger_set_level(logger_level_t level);`
 
 Sets the minimum emitted log level.
 
 ### File output
 
-#### `logger_status_t logger_enable_file_output(logger_handle_t* logger, const char* path);`
+#### `logger_status_t logger_enable_file_output(const char* path);`
 
 Configures file output (path must be non-NULL and non-empty). The path is copied internally.
 
-#### `logger_status_t logger_disable_file_output(logger_handle_t* logger);`
+#### `logger_status_t logger_disable_file_output();`
 
 Disables file output. Safe to call even if file output is not enabled.
 
 ### Tracy
 
-#### `logger_status_t logger_enable_tracy(logger_handle_t* logger);`
+#### `logger_status_t logger_enable_tracy();`
 Enables Tracy backend (if compiled in).
 
-#### `logger_status_t logger_disable_tracy(logger_handle_t* logger);`
+#### `logger_status_t logger_disable_tracy();`
 Disables Tracy backend.
 
 ---
 
 ## Logging
 
-### `void logger_log(logger_handle_t* logger, logger_level_t level, const char* file, int line, const char* fmt, ...);`
+### `void logger_log(logger_level_t level, const char* file, int line, const char* fmt, ...);`
 
 Core logging function (`printf`-style).
 
@@ -124,17 +124,17 @@ The formatted message is forwarded to the active backend(s).
 
 These macros capture callsite via `__FILE__` / `__LINE__`:
 
-- `LOG_TRACE(logger, fmt, ...)`
-- `LOG_DEBUG(logger, fmt, ...)`
-- `LOG_INFO(logger, fmt, ...)`
-- `LOG_WARN(logger, fmt, ...)`
-- `LOG_ERROR(logger, fmt, ...)`
-- `LOG_FATAL(logger, fmt, ...)`
+- `LOG_TRACE(fmt, ...)`
+- `LOG_DEBUG(fmt, ...)`
+- `LOG_INFO(fmt, ...)`
+- `LOG_WARN(fmt, ...)`
+- `LOG_ERROR(fmt, ...)`
+- `LOG_FATAL(fmt, ...)`
 
 Example:
 
 ```c
-LOG_INFO(log, "User=%s, id=%d", user, id);
+LOG_INFO("User=%s, id=%d", user, id);
 ```
 
 ## Thread-safety

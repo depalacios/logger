@@ -9,10 +9,13 @@ int main(int argc, char *argv[]) {
   }
 
   /* enable file */
-  // logger_enable_file_output(log, "app.log");
+  // ret = logger_enable_file_output("app.log");
+  // if (ret != LOGGER_OK) {
+  //   printf("ret=%d", ret);
+  // }
 
   /* enable tracy (if compiled) */
-  // logger_enable_tracy(log);
+  // logger_enable_tracy();
 
   /* level */
   logger_start(LOGGER_LEVEL_TRACE);

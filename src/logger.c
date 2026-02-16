@@ -6,6 +6,8 @@
 #include "file_backend.h"
 #include "tracy_backend.h"
 
+// #define USE_QUILL
+
 #ifdef USE_QUILL
 #include "quill_backend.h"
 #endif
@@ -37,7 +39,7 @@ struct logger_handle {
   /* pthread_mutex_t mutex; */
 };
 
-static logger_backend_t *make_backend(logger_handle_t *l) {
+static logger_backend_t *make_backend() {
   logger_backend_t *composite = logger_backend_composite_create();
   if (!composite)
     return NULL;
@@ -47,7 +49,8 @@ static logger_backend_t *make_backend(logger_handle_t *l) {
 #ifdef USE_QUILL
   // If QUILL selected will be the only backend
   logger_backend_t *q = logger_backend_quill_create(
-      l->file_enabled ? l->file_path : NULL, l->console_enabled);
+      base_logger->file_enabled ? base_logger->file_path : NULL,
+      base_logger->console_enabled);
 
   if (!q)
     goto fail;
@@ -56,7 +59,7 @@ static logger_backend_t *make_backend(logger_handle_t *l) {
   added = 1;
 
   // Tracy can go also
-  if (l->tracy_enabled) {
+  if (base_logger->tracy_enabled) {
     logger_backend_t *t = logger_backend_tracy_create();
     if (!t)
       goto fail;
@@ -67,7 +70,7 @@ static logger_backend_t *make_backend(logger_handle_t *l) {
 #endif
 
   /* ---- Fallback default logs: backends C ---- */
-  if (l->console_enabled) {
+  if (base_logger->console_enabled) {
     logger_backend_t *c = logger_backend_console_create();
     if (!c)
       goto fail;
@@ -76,8 +79,9 @@ static logger_backend_t *make_backend(logger_handle_t *l) {
   }
 
   /* file */
-  if (l->file_enabled && l->file_path && l->file_path[0] != '\0') {
-    logger_backend_t *f = logger_backend_file_create(l->file_path);
+  if (base_logger->file_enabled && base_logger->file_path &&
+      base_logger->file_path[0] != '\0') {
+    logger_backend_t *f = logger_backend_file_create(base_logger->file_path);
     if (!f)
       goto fail;
     logger_backend_composite_add(composite, f);
@@ -85,7 +89,7 @@ static logger_backend_t *make_backend(logger_handle_t *l) {
   }
 
   /* tracy */
-  if (l->tracy_enabled) {
+  if (base_logger->tracy_enabled) {
     logger_backend_t *t = logger_backend_tracy_create();
     if (!t)
       goto fail;
@@ -154,7 +158,7 @@ logger_status_t logger_start(logger_level_t level) {
     base_logger->backend = NULL;
   }
 
-  base_logger->backend = make_backend(base_logger);
+  base_logger->backend = make_backend();
   if (!base_logger->backend) {
     /* pthread_mutex_unlock(&logger->mutex); */
     return LOGGER_UNKOWN_ERROR;
@@ -222,7 +226,7 @@ logger_status_t logger_destroy(void) {
 
 /* config */
 logger_status_t logger_enable_file_output(const char *path) {
-  if (base_logger)
+  if (!base_logger)
     return LOGGER_NO_EXIST;
   if (!path || !path[0])
     return LOGGER_INVALID_PATH;
@@ -234,11 +238,11 @@ logger_status_t logger_enable_file_output(const char *path) {
     /* pthread_mutex_unlock(&logger->mutex); */
     return LOGGER_OUT_OF_MEMORY;
   }
+
   strcpy(copy, path);
-
   free(base_logger->file_path);
-  base_logger->file_path = copy;
 
+  base_logger->file_path = copy;
   base_logger->file_enabled = 1;
 
   /* pthread_mutex_unlock(&logger->mutex); */
@@ -284,9 +288,9 @@ void logger_log(logger_level_t level, const char *file, int line,
     return;
   if (!base_logger->started)
     return;
-  if (level < base_logger->level)
-    return;
   if (!base_logger->backend)
+    return;
+  if (level < base_logger->level)
     return;
 
   char msg[2048];
