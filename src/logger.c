@@ -21,6 +21,29 @@
 #include <pthread.h>
 */
 
+/**
+ * @internal
+ * @brief String lookup table for logger_status_t values.
+ *
+ * This table maps each logger_status_t enumeration value to its textual
+ * representation. It is used internally by logger_status_to_string() to
+ * provide human-readable error messages.
+ *
+ * The table is indexed directly by the enum value, therefore the order of
+ * elements must match the logger_status_t definition exactly.
+ *
+ * This symbol is private to the module and must not be accessed directly
+ * by library users.
+ */
+static const char *logger_status_str[LOGGER_STATUS_COUNT] = {
+    [LOGGER_OK] = "LOGGER_OK",
+    [LOGGER_NO_EXIST] = "LOGGER_NO_EXIST",
+    [LOGGER_FILE_IS_ALREADY_OPEN] = "LOGGER_FILE_IS_ALREADY_OPEN",
+    [LOGGER_INVALID_PATH] = "LOGGER_INVALID_PATH",
+    [LOGGER_OUT_OF_MEMORY] = "LOGGER_OUT_OF_MEMORY",
+    [LOGGER_UNABLE_TO_OPEN_FILE] = "LOGGER_UNABLE_TO_OPEN_FILE",
+    [LOGGER_UNKOWN_ERROR] = "LOGGER_UNKOWN_ERROR"};
+
 logger_handle_t *base_logger = {0};
 
 struct logger_handle {
@@ -305,4 +328,11 @@ void logger_log(logger_level_t level, const char *file, int line,
                                     msg);
   }
   /* pthread_mutex_unlock(&logger->mutex); */
+}
+
+const char *logger_status_to_string(logger_status_t status) {
+  if (status >= 0 && status < LOGGER_STATUS_COUNT && logger_status_str[status])
+    return logger_status_str[status];
+
+  return "LOGGER_STATUS_INVALID";
 }

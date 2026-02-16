@@ -42,6 +42,7 @@ typedef enum logger_status {
   LOGGER_OUT_OF_MEMORY,        /**< Memory allocation failed. */
   LOGGER_UNABLE_TO_OPEN_FILE,  /**< fopen() failed for the provided path. */
   LOGGER_UNKOWN_ERROR, /**< Unknown/unclassified error (avoid if possible). */
+  LOGGER_STATUS_COUNT  /**< status counter */
 } logger_status_t;
 
 /**
@@ -195,6 +196,30 @@ logger_status_t logger_disable_tracy();
  */
 void logger_log(logger_level_t level, const char *file, int line,
                 const char *fmt, ...);
+
+// --- Logger utils functions --- //
+/**
+ * @brief Converts a logger_status_t value to a readable string.
+ *
+ * This function returns the symbolic name of a logger status code,
+ * allowing applications to print meaningful error messages instead
+ * of numeric values.
+ *
+ * @param status The logger status code to convert.
+ *
+ * @return A constant null-terminated string describing the status.
+ *         - Returns the corresponding enum name if valid
+ *         - Returns "LOGGER_STATUS_INVALID" if the value is out of range
+ *
+ * @note The returned pointer is statically allocated and must NOT be freed.
+ * @note Thread-safe.
+ *
+ * @code
+ * logger_status_t st = logger_enable_file_output("app.log");
+ * printf("Result: %s\n", logger_status_to_string(st));
+ * @endcode
+ */
+const char *logger_status_to_string(logger_status_t status);
 
 /**
  * @name Convenience macros
